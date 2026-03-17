@@ -1,4 +1,13 @@
 #!/usr/bin/make -f
 
+# optimize=-lto because I use CMake's LTO
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all optimize=-lto qa=+all
+
 %:
 	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DBUILD_SHARED_LIBS=true \
+		-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=true \
+		-DCMAKE_C_VISIBILITY_PRESET=hidden

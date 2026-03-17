@@ -1,0 +1,20 @@
+libzarchive.so.0.1 libzarchive0.1 #MINVER#
+* Build-Depends-Package: libzarchive-dev
+ (c++)"ZArchiveReader::GetDirEntry(unsigned int, unsigned int, ZArchiveReader::DirEntry&) const@Base" 0.1.2
+ (c++)"ZArchiveReader::GetDirEntryCount(unsigned int) const@Base" 0.1.2
+ (c++)"ZArchiveReader::GetFileSize(unsigned int)@Base" 0.1.2
+ (c++)"ZArchiveReader::IsDirectory(unsigned int) const@Base" 0.1.2
+ (c++)"ZArchiveReader::IsFile(unsigned int) const@Base" 0.1.2
+ (c++)"ZArchiveReader::LookUp(std::basic_string_view<char, std::char_traits<char> >, bool, bool)@Base" 0.1.2
+ (c++)"ZArchiveReader::OpenFromFile(std::filesystem::__cxx11::path const&)@Base" 0.1.2
+ (c++|arch-bits=32)"ZArchiveReader::ReadFromFile(unsigned int, unsigned long long, unsigned long long, void*)@Base" 0.1.2
+ (c++|arch-bits=64)"ZArchiveReader::ReadFromFile(unsigned int, unsigned long, unsigned long, void*)@Base" 0.1.2
+ (c++)"ZArchiveReader::~ZArchiveReader()@Base" 0.1.2
+ (c++|arch-bits=32)"ZArchiveWriter::AppendData(void const*, unsigned int)@Base" 0.1.2
+ (c++|arch-bits=64)"ZArchiveWriter::AppendData(void const*, unsigned long)@Base" 0.1.2
+ (c++)"ZArchiveWriter::Finalize()@Base" 0.1.2
+ (c++)"ZArchiveWriter::MakeDir(char const*, bool)@Base" 0.1.2
+ (c++)"ZArchiveWriter::StartNewFile(char const*)@Base" 0.1.2
+ (c++|arch-bits=32)"ZArchiveWriter::ZArchiveWriter(void (*)(int, void*), void (*)(void const*, unsigned int, void*), void*)@Base" 0.1.2
+ (c++|arch-bits=64)"ZArchiveWriter::ZArchiveWriter(void (*)(int, void*), void (*)(void const*, unsigned long, void*), void*)@Base" 0.1.2
+ (c++)"ZArchiveWriter::~ZArchiveWriter()@Base" 0.1.2

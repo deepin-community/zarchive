@@ -1,0 +1,25 @@
+Description: link to libzstd dynamically
+ Upstream defaults to static linking if possible, and this makes sense
+ for them. In Debian though, shared linking is always preferred if
+ possible, and zarchive is no exception. Starting with zstd version
+ 1.5.2+dfsg2-1 (what an odd number by the way), the package started
+ shipping CMake Config files alongside pkg-config ones, and this
+ resulted in static linking, as the Config path, contrary to the
+ pkg-config one, preferred static linking before this patch.
+Author: Andrea Pappacoda <tachi@debian.org>
+Forwarded: not-needed
+Last-Update: 2023-01-13
+
+--- zarchive-0.1.2.orig/cmake/Findzstd.cmake
++++ zarchive-0.1.2/cmake/Findzstd.cmake
+@@ -7,9 +7,7 @@ find_package(zstd CONFIG QUIET)
+ if (zstd_FOUND)
+ 	# Use upstream zstdConfig.cmake if possible
+ 	if (NOT TARGET zstd::zstd)
+-		if (TARGET zstd::libzstd_static)
+-			add_library(zstd::zstd ALIAS zstd::libzstd_static)
+-		elseif (TARGET zstd::libzstd_shared)
++		if (TARGET zstd::libzstd_shared)
+ 			add_library(zstd::zstd ALIAS zstd::libzstd_shared)
+ 		endif()
+ 	endif()
