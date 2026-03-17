@@ -1,0 +1,249 @@
+Description: Use GCC visibility
+ This significantly clears up the shared object
+Author: Andrea Pappacoda <tachi@debian.org>
+Forwarded: https://github.com/Exzap/ZArchive/pull/14
+Last-Update: 2022-08-31
+
+--- zarchive-0.1.1.orig/CMakeLists.txt
++++ zarchive-0.1.1/CMakeLists.txt
+@@ -28,6 +28,7 @@ set_target_properties(zarchive PROPERTIE
+     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+     VERSION "${PROJECT_VERSION}"
+     SOVERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
++    CXX_VISIBILITY_PRESET "hidden"
+ )
+ 
+ target_include_directories(zarchive
+--- zarchive-0.1.1.orig/include/zarchive/zarchivecommon.h
++++ zarchive-0.1.1/include/zarchive/zarchivecommon.h
+@@ -65,6 +65,33 @@
+ # endif
+ #endif
+ 
++/* Visibility */
++#if defined _WIN32 || defined __CYGWIN__
++#	ifdef ZAR_SHARED_LIB
++#		ifdef ZAR_BUILDING_DLL
++#			ifdef __GNUC__
++#				define ZAR_PUB __attribute__ ((dllexport))
++#			else
++#				define ZAR_PUB __declspec(dllexport)
++#			endif
++#		else
++#			ifdef __GNUC__
++#				define ZAR_PUB __attribute__ ((dllimport))
++#			else
++#				define ZAR_PUB __declspec(dllimport)
++#			endif
++#		endif
++#	else
++#		define ZAR_PUB
++#	endif
++#else
++#	if defined(__GNUC__) && __GNUC__ >= 4
++#		define ZAR_PUB __attribute__ ((visibility ("default")))
++#	else
++#		define ZAR_PUB
++#	endif
++#endif
++
+ namespace _ZARCHIVE
+ {
+ 	inline constexpr size_t COMPRESSED_BLOCK_SIZE = 64 * 1024; // 64KiB
+--- zarchive-0.1.1.orig/include/zarchive/zarchivereader.h
++++ zarchive-0.1.1/include/zarchive/zarchivereader.h
+@@ -18,7 +18,7 @@ static inline ZArchiveNodeHandle ZARCHIV
+ class ZArchiveReader
+ {
+ public:
+-	struct DirEntry
++	struct ZAR_PUB DirEntry
+ 	{
+ 		std::string_view name;
+ 		bool isFile;
+@@ -26,21 +26,21 @@ public:
+ 		uint64_t size; // only valid for directories
+ 	};
+ 
+-	static ZArchiveReader* OpenFromFile(const std::filesystem::path& path);
++	ZAR_PUB static ZArchiveReader* OpenFromFile(const std::filesystem::path& path);
+ 
+-	~ZArchiveReader();
++	ZAR_PUB ~ZArchiveReader();
+ 
+-	ZArchiveNodeHandle LookUp(std::string_view path, bool allowFile = true, bool allowDirectory = true);
+-	bool IsDirectory(ZArchiveNodeHandle nodeHandle) const;
+-	bool IsFile(ZArchiveNodeHandle nodeHandle) const;
++	ZAR_PUB ZArchiveNodeHandle LookUp(std::string_view path, bool allowFile = true, bool allowDirectory = true);
++	ZAR_PUB bool IsDirectory(ZArchiveNodeHandle nodeHandle) const;
++	ZAR_PUB bool IsFile(ZArchiveNodeHandle nodeHandle) const;
+ 
+ 	// directory operations
+-	uint32_t GetDirEntryCount(ZArchiveNodeHandle nodeHandle) const;
+-	bool GetDirEntry(ZArchiveNodeHandle nodeHandle, uint32_t index, DirEntry& dirEntry) const;
++	ZAR_PUB uint32_t GetDirEntryCount(ZArchiveNodeHandle nodeHandle) const;
++	ZAR_PUB bool GetDirEntry(ZArchiveNodeHandle nodeHandle, uint32_t index, DirEntry& dirEntry) const;
+ 
+ 	// file operations
+-	uint64_t GetFileSize(ZArchiveNodeHandle nodeHandle);
+-	uint64_t ReadFromFile(ZArchiveNodeHandle nodeHandle, uint64_t offset, uint64_t length, void* buffer);
++	ZAR_PUB uint64_t GetFileSize(ZArchiveNodeHandle nodeHandle);
++	ZAR_PUB uint64_t ReadFromFile(ZArchiveNodeHandle nodeHandle, uint64_t offset, uint64_t length, void* buffer);
+ 
+ private:
+ 	struct CacheBlock
+--- zarchive-0.1.1.orig/include/zarchive/zarchivewriter.h
++++ zarchive-0.1.1/include/zarchive/zarchivewriter.h
+@@ -30,13 +30,13 @@ public:
+ 	typedef void(*CB_NewOutputFile)(const int32_t partIndex, void* ctx);
+ 	typedef void(*CB_WriteOutputData)(const void* data, size_t length, void* ctx);
+ 
+-	ZArchiveWriter(CB_NewOutputFile cbNewOutputFile, CB_WriteOutputData cbWriteOutputData, void* ctx);
+-	~ZArchiveWriter();
++	ZAR_PUB ZArchiveWriter(CB_NewOutputFile cbNewOutputFile, CB_WriteOutputData cbWriteOutputData, void* ctx);
++	ZAR_PUB ~ZArchiveWriter();
+ 
+-	bool StartNewFile(const char* path); // creates a new virtual file and makes it active
+-	void AppendData(const void* data, size_t size); // appends data to currently active file
+-	bool MakeDir(const char* path, bool recursive = false);
+-	void Finalize();
++	ZAR_PUB bool StartNewFile(const char* path); // creates a new virtual file and makes it active
++	ZAR_PUB void AppendData(const void* data, size_t size); // appends data to currently active file
++	ZAR_PUB bool MakeDir(const char* path, bool recursive = false);
++	ZAR_PUB void Finalize();
+ 
+ private:
+ 	PathNode* GetNodeByPath(PathNode* root, std::string_view path);
+--- zarchive-0.1.1.orig/src/zarchivereader.cpp
++++ zarchive-0.1.1/src/zarchivereader.cpp
+@@ -26,7 +26,7 @@ static uint64_t _getValidElementCount(ui
+ 	return size / elementSize;
+ }
+ 
+-ZArchiveReader* ZArchiveReader::OpenFromFile(const std::filesystem::path& path)
++ZAR_PUB ZArchiveReader* ZArchiveReader::OpenFromFile(const std::filesystem::path& path)
+ {
+ 	std::ifstream file;
+ 	file.open(path, std::ios_base::in | std::ios_base::binary);
+@@ -117,12 +117,12 @@ ZArchiveReader::ZArchiveReader(std::ifst
+ 	m_cacheBlocks.back().next = nullptr;
+ }
+ 
+-ZArchiveReader::~ZArchiveReader()
++ZAR_PUB ZArchiveReader::~ZArchiveReader()
+ {
+ 
+ }
+ 
+-ZArchiveNodeHandle ZArchiveReader::LookUp(std::string_view path, bool allowFile, bool allowDirectory)
++ZAR_PUB ZArchiveNodeHandle ZArchiveReader::LookUp(std::string_view path, bool allowFile, bool allowDirectory)
+ {
+ 	std::string_view pathParser = path;
+ 	uint32_t currentNode = 0;
+@@ -158,21 +158,21 @@ ZArchiveNodeHandle ZArchiveReader::LookU
+ 	return ZARCHIVE_INVALID_NODE;
+ }
+ 
+-bool ZArchiveReader::IsDirectory(ZArchiveNodeHandle nodeHandle) const
++ZAR_PUB bool ZArchiveReader::IsDirectory(ZArchiveNodeHandle nodeHandle) const
+ {
+ 	if (nodeHandle >= m_fileTree.size())
+ 		return false;
+ 	return !m_fileTree[nodeHandle].IsFile();
+ }
+ 
+-bool ZArchiveReader::IsFile(ZArchiveNodeHandle nodeHandle) const
++ZAR_PUB bool ZArchiveReader::IsFile(ZArchiveNodeHandle nodeHandle) const
+ {
+ 	if (nodeHandle >= m_fileTree.size())
+ 		return false;
+ 	return m_fileTree[nodeHandle].IsFile();
+ }
+ 
+-uint32_t ZArchiveReader::GetDirEntryCount(ZArchiveNodeHandle nodeHandle) const
++ZAR_PUB uint32_t ZArchiveReader::GetDirEntryCount(ZArchiveNodeHandle nodeHandle) const
+ {
+ 	if (nodeHandle >= m_fileTree.size())
+ 		return 0;
+@@ -182,7 +182,7 @@ uint32_t ZArchiveReader::GetDirEntryCoun
+ 	return entry.directoryRecord.count;
+ }
+ 
+-bool ZArchiveReader::GetDirEntry(ZArchiveNodeHandle nodeHandle, uint32_t index, DirEntry& dirEntry) const
++ZAR_PUB bool ZArchiveReader::GetDirEntry(ZArchiveNodeHandle nodeHandle, uint32_t index, DirEntry& dirEntry) const
+ {
+ 	if (nodeHandle >= m_fileTree.size())
+ 		return false;
+@@ -204,7 +204,7 @@ bool ZArchiveReader::GetDirEntry(ZArchiv
+ 	return true;
+ }
+ 
+-uint64_t ZArchiveReader::GetFileSize(ZArchiveNodeHandle nodeHandle)
++ZAR_PUB uint64_t ZArchiveReader::GetFileSize(ZArchiveNodeHandle nodeHandle)
+ {
+ 	if (nodeHandle >= m_fileTree.size())
+ 		return 0;
+@@ -214,7 +214,7 @@ uint64_t ZArchiveReader::GetFileSize(ZAr
+ 	return file.GetFileSize();
+ }
+ 
+-uint64_t ZArchiveReader::ReadFromFile(ZArchiveNodeHandle nodeHandle, uint64_t offset, uint64_t length, void* buffer)
++ZAR_PUB uint64_t ZArchiveReader::ReadFromFile(ZArchiveNodeHandle nodeHandle, uint64_t offset, uint64_t length, void* buffer)
+ {
+ 	if (nodeHandle >= m_fileTree.size())
+ 		return 0;
+--- zarchive-0.1.1.orig/src/zarchivewriter.cpp
++++ zarchive-0.1.1/src/zarchivewriter.cpp
+@@ -12,14 +12,14 @@
+ #include <cassert>
+ #include <algorithm>
+ 
+-ZArchiveWriter::ZArchiveWriter(CB_NewOutputFile cbNewOutputFile, CB_WriteOutputData cbWriteOutputData, void* ctx) : m_cbCtx(ctx), m_cbNewOutputFile(cbNewOutputFile), m_cbWriteOutputData(cbWriteOutputData)
++ZAR_PUB ZArchiveWriter::ZArchiveWriter(CB_NewOutputFile cbNewOutputFile, CB_WriteOutputData cbWriteOutputData, void* ctx) : m_cbCtx(ctx), m_cbNewOutputFile(cbNewOutputFile), m_cbWriteOutputData(cbWriteOutputData)
+ {
+ 	cbNewOutputFile(-1, ctx);
+ 	m_mainShaCtx = (struct Sha_256*)malloc(sizeof(struct Sha_256));
+ 	sha_256_init(m_mainShaCtx, m_integritySha);
+ };
+ 
+-ZArchiveWriter::~ZArchiveWriter()
++ZAR_PUB ZArchiveWriter::~ZArchiveWriter()
+ {
+ 	free(m_mainShaCtx);
+ }
+@@ -53,7 +53,7 @@ ZArchiveWriter::PathNode* ZArchiveWriter
+ 	return nullptr;
+ }
+ 
+-bool ZArchiveWriter::StartNewFile(const char* path)
++ZAR_PUB bool ZArchiveWriter::StartNewFile(const char* path)
+ {
+ 	m_currentFileNode = nullptr;
+ 	std::string_view pathParser = path;
+@@ -71,7 +71,7 @@ bool ZArchiveWriter::StartNewFile(const
+ 	return true;
+ }
+ 
+-bool ZArchiveWriter::MakeDir(const char* path, bool recursive)
++ZAR_PUB bool ZArchiveWriter::MakeDir(const char* path, bool recursive)
+ {
+ 	std::string_view pathParser = path;
+ 	while (!pathParser.empty() && (pathParser.back() == '/' || pathParser.back() == '\\'))
+@@ -158,7 +158,7 @@ void ZArchiveWriter::StoreBlock(const ui
+ 	m_numWrittenOffsetRecords++;
+ }
+ 
+-void ZArchiveWriter::AppendData(const void* data, size_t size)
++ZAR_PUB void ZArchiveWriter::AppendData(const void* data, size_t size)
+ {
+ 	size_t dataSize = size;
+ 	const uint8_t* input = (const uint8_t*)data;
+@@ -189,7 +189,7 @@ void ZArchiveWriter::AppendData(const vo
+ 	m_currentInputOffset += dataSize;
+ }
+ 
+-void ZArchiveWriter::Finalize()
++ZAR_PUB void ZArchiveWriter::Finalize()
+ {
+ 	m_currentFileNode = nullptr; // make sure the padding added below doesn't modify the active file
+ 	// flush write buffer by padding it to the length of a full block

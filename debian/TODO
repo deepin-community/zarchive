@@ -1,0 +1,6 @@
+# TODO
+
+- Look into replacing sha_256.c with a crypto library available in Debian,
+  possibly libsodium. I do not consider this a priority as the embedded version
+  has been "tweaked for extra performance", and is not a classic embedded
+  dependency.

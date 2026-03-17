@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+# This test compiles and runs the zarchive tool using the installed library
+
+cd "$AUTOPKGTEST_TMP"
+
+c++ -Wall -Wextra -Wpedantic -Werror -o main "$OLDPWD/src/main.cpp" $(pkg-config --libs zarchive)
+
+./main

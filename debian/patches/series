@@ -1,0 +1,4 @@
+man.patch
+visibility.patch
+main.cpp-unused-parameter.patch
+cmake-zstd-shared-link.patch

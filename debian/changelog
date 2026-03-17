@@ -1,5 +1,21 @@
-template-repository (1.0-1) unstable; urgency=medium
+zarchive (0.1.2-3) unstable; urgency=low
 
-  * Initial release
+  * First dgit upload
+  * d/control: apply X-Style black
+  * d/control: declare dpkg-build-api = 1
+  * d/control: use my @debian.org email address
+  * d/README.source: document packaging workflow
 
- -- Tsic404 <liuheng@deepin.org>  Sat, 28 Jan 2023 13:46:49 +0800
+ -- Andrea Pappacoda <tachi@debian.org>  Wed, 16 Apr 2025 16:07:57 +0200
+
+zarchive (0.1.2-2) unstable; urgency=medium
+
+  * d/patches: always link to libzstd dynamically
+
+ -- Andrea Pappacoda <andrea@pappacoda.it>  Fri, 13 Jan 2023 22:13:39 +0100
+
+zarchive (0.1.2-1) unstable; urgency=low
+
+  * Initial release. Closes: #1018223
+
+ -- Andrea Pappacoda <andrea@pappacoda.it>  Thu, 01 Sep 2022 17:19:02 +0200
