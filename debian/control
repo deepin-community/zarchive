@@ -36,6 +36,7 @@ Architecture: any
 Multi-Arch: same
 Depends:
  libzarchive0.1 (= ${binary:Version}),
+ libzstd-dev,
  ${misc:Depends},
 Description: library for creating and reading zstd-compressed files - development files
  ZArchive is yet another file archive format. Think of zip, tar, 7z,

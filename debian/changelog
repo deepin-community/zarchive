@@ -1,3 +1,11 @@
+zarchive (0.1.2-3.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+  * debian/control: Add missing libzstd-dev to libzarchive-dev's Depends
+    (Closes: #1126925)
+
+ -- Sebastian Ramacher <sramacher@debian.org>  Sat, 21 Feb 2026 09:59:29 +0100
+
 zarchive (0.1.2-3) unstable; urgency=low
 
   * First dgit upload
